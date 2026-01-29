@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Web ↔ Native Bridge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        body {
+          font-family: system-ui, sans-serif;
+          padding: 24px;
+        }
+
+        button {
+          padding: 12px 20px;
+          font-size: 16px;
+          border-radius: 8px;
+          border: none;
+          background: #2563eb;
+          color: white;
+          cursor: pointer;
+        }
+
+        button:active {
+          opacity: 0.8;
+        }
+
+        pre {
+          margin-top: 20px;
+          background: #f3f4f6;
+          padding: 12px;
+          border-radius: 6px;
+        }
+    </style>
+
+    <script>
+        /**
+         * Cross-platform Native Bridge
+         * Android  -> window.Android.postMessage
+         * Flutter  -> window.FlutterChannel.postMessage
+         * iOS      -> window.webkit.messageHandlers.postMessage
+         */
+        function sendToNative(type, payload) {
+          const message = JSON.stringify({
+            type,
+            payload,
+            timestamp: Date.now(),
+          });
+
+          // Android
+          if (window.Android && Android.postMessage) {
+            Android.postMessage(message);
+            return;
+          }
+
+
+          // iOS
+          if (
+            window.webkit &&
+            window.webkit.messageHandlers &&
+            window.webkit.messageHandlers.postMessage
+          ) {
+            window.webkit.messageHandlers.postMessage.postMessage(message);
+            return;
+          }
+
+          // Web fallback
+          console.log("Native not available:", message);
+          alert("Native not available:\n" + message);
+        }
+
+        /** Example action */
+        function loginAction() {
+          //sendToNative("LOGIN_ACTION", "Halo sayang");
+          Android.postMessage("LOGIN_ACTION:Halo sayang");
+        }
+
+        /** Native → JS callback example */
+        function fromNative(message) {
+          document.getElementById("log").textContent =
+            "From Native:\n" + message;
+        }
+    </script>
+</head>
+
+<body>
+<h2>WebView Native Bridge Test</h2>
+
+<button onclick="loginAction()">Login</button>
+
+<pre id="log">Waiting message...</pre>
+</body>
+</html>
